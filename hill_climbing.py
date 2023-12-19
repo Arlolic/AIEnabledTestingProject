@@ -19,11 +19,24 @@ class Cluster:
         else:
             return False
         
+    def __str__(self) -> str:
+        return str(self.list_of_modules)
+    
     def is_empty(self):
         if not self.list_of_modules:
             return True
         else:
             return False
+    
+    def equals(self, other_cluster):
+        for module in self.list_of_modules:
+            if module not in other_cluster.list_of_modules:
+                return False
+        for module in other_cluster.list_of_modules:
+            if module not in self.list_of_modules:
+                return False
+        return True
+
 
 
 # Below is MQ fitness function, where MQ is sum of all the Modularization Factors (MF) which is the ratio of inner to outer edges within each module or group (Evaluates 
@@ -32,9 +45,6 @@ def fitness(clusters, weighted_connections, Cluster_original = None, Cluster_new
     mq = 0
 
     if(Cluster_original is not None and Cluster_new is not None and module is not None):
-        print(Cluster_original.list_of_modules[0])
-        print(Cluster_new)
-        print(module)
         Cluster_original.remove_module(module) # remove 'module' out of the current cluster
         Cluster_new.add_module(module) # remove 'module' out of the current cluster
 
@@ -74,8 +84,10 @@ def hill_climb(weighted_connections, modules):
     list_of_clusters = []
 
     for m in modules:
-        list_of_clusters.append(Cluster(m)) #Assign each module to a building block
+        list_of_clusters.append(Cluster(m)) #Assign each module to a building block 
         
+    random.shuffle(list_of_clusters) #shuffle the clusters
+
     s_fitness = fitness(list_of_clusters, weighted_connections)
     print(s_fitness)
     #Building block is going to be a list (or can it be a set?)
@@ -88,36 +100,32 @@ def hill_climb(weighted_connections, modules):
     #Set climb = True (?)
 
     
+    search_ends = True
 
-    while True: #Random Ascent Hill Climbing Algorithm
+    while search_ends: #Random Ascent Hill Climbing Algorithm
         for cluster in list_of_clusters: #check each building block
-            #list_of_modules_to_remove = []
-            search_ends = True
             for module in cluster.list_of_modules: #check each module
                 for cluster2 in list_of_clusters: #move the clustering
                     if not cluster2.contains(module):
                         n_fitness = fitness(list_of_clusters, weighted_connections, cluster, cluster2, module) #Then calculate MQ
-                        print(n_fitness)
                         if n_fitness > s_fitness:
-                            cluster2.add_module(m) #Do the clustering
-                            s = list_of_clusters
+                            cluster2.add_module(module) #Do the clustering
                             s_fitness = n_fitness
-                            #list_of_modules_to_remove.append(m)
-                            cluster.remove_module(m)
+                            cluster.remove_module(module)
                             search_ends = False
-                
-
-        if search_ends: # Search ends when none of the nearest neighbours from a clustering can yield a better MQ value
-            break #Used this as a reference: https://note.nkmk.me/en/python-break-nested-loops/
-        
+                            break
 
     # remove any empty lists in list_of_clusters
     list_of_clusters = [cluster for cluster in list_of_clusters if cluster.is_empty() == False]
 
     s_fitness = fitness(list_of_clusters, weighted_connections)
     print(s_fitness)
+
+    print(list_of_clusters.__str__())
+    return list_of_clusters
     # Need to identify common features of each solution in best hill climb to form building blocks for subsequent hill climb
 
+    return
     # Perform final set of hill climbs, identical to that of initial set of hill climbs
     #while True:
         #TODO
