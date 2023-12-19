@@ -56,17 +56,17 @@ for filename in os.scandir(directory):
         print("==========") #debugging
 
 resulting_clusterings = []
-for i in range(10):
+for i in range(20):
     y = hill_climbing.hill_climb(bison_weighted_connections, bison_nodes)
     resulting_clusterings.append((y, hill_climbing.fitness(y, bison_weighted_connections)))
     
 sorted_clusterings = sorted(resulting_clusterings, key=itemgetter(1))
 
 for clustering in sorted_clusterings:
-    print(hill_climbing.fitness(clustering[0], bison_weighted_connections))
+    print(clustering[1])
 
 # keep the x% top and the clusters which are common
-x = 0.1
+x = 0.05
 start = (len(sorted_clusterings)-1) * (1-x)
 sorted_clusterings = sorted_clusterings[int(start)::]
 
@@ -96,3 +96,5 @@ for building_block in building_blocks:
     print("===========")
     for module in building_block.list_of_modules:
         print(module)
+
+hill_climbing.hill_climb(bison_weighted_connections, building_blocks)

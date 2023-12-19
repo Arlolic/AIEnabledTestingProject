@@ -54,15 +54,32 @@ def fitness(clusters, weighted_connections, Cluster_original = None, Cluster_new
             continue
         i = 0 #sum of inner edge weights
         j = 0 #sum of outer edge weights
-        for m in cluster.list_of_modules: #Check all modules in cluster
-            for wc in weighted_connections: #Check for all possible weighted connections
-                if m in wc:
-                    if wc[0] in cluster.list_of_modules and wc[1] in cluster.list_of_modules: # if other module in 'wc' is in the same cluster as 'm'
-                        i += wc[2] # add onto the sum of inner edge weights
-                    else:
-                        j += wc[2] # add onto the sum of outer edge weights
-        mf = i / (i + j / 2)
-        mq += mf
+        if not (type(cluster.list_of_modules[0]) is list):
+            for m in cluster.list_of_modules: #Check all modules in cluster
+                for wc in weighted_connections: #Check for all possible weighted connections
+                    if m in wc:
+                        if wc[0] in cluster.list_of_modules and wc[1] in cluster.list_of_modules: # if other module in 'wc' is in the same cluster as 'm'
+                            i += wc[2] # add onto the sum of inner edge weights
+                        else:
+                            j += wc[2] # add onto the sum of outer edge weights
+            mf = i / (i + j / 2)
+            mq += mf
+        else:
+            megalist = []
+            for block in cluster.list_of_modules:
+                for module in block:
+                    megalist.append(module)
+            for building_block in cluster.list_of_modules: #Check all modules in cluster
+                for wc in weighted_connections: #Check for all possible weighted connections
+                    for m in building_block:
+                        if m in wc:
+                            if wc[0] in megalist and wc[1] in megalist: # if other module in 'wc' is in the same cluster as 'm'
+                                i += wc[2] # add onto the sum of inner edge weights
+                            else:
+                                j += wc[2] # add onto the sum of outer edge weights
+            mf = i / (i + j / 2)
+            mq += mf
+
     
     if(Cluster_original is not None and Cluster_new is not None and module is not None):
         Cluster_new.remove_module(module) # remove 'module' out of the current cluster
@@ -84,6 +101,9 @@ def hill_climb(weighted_connections, modules):
     list_of_clusters = []
 
     for m in modules:
+        if(type(m) is Cluster):
+            list_of_clusters = modules
+            break
         list_of_clusters.append(Cluster(m)) #Assign each module to a building block 
         
     random.shuffle(list_of_clusters) #shuffle the clusters
@@ -125,7 +145,6 @@ def hill_climb(weighted_connections, modules):
     return list_of_clusters
     # Need to identify common features of each solution in best hill climb to form building blocks for subsequent hill climb
 
-    return
     # Perform final set of hill climbs, identical to that of initial set of hill climbs
     #while True:
         #TODO
