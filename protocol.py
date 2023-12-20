@@ -60,41 +60,80 @@ for i in range(20):
     y = hill_climbing.hill_climb(bison_weighted_connections, bison_nodes)
     resulting_clusterings.append((y, hill_climbing.fitness(y, bison_weighted_connections)))
     
-sorted_clusterings = sorted(resulting_clusterings, key=itemgetter(1))
 
-for clustering in sorted_clusterings:
-    print(clustering[1])
+final_clustering = []
+print("==========") #debugging
+print("==========") #debugging
+print("==========") #debugging
+for x in range(0, 101, 10):
+    print("Testing for the top {0} %".format(x))
+    sorted_clusterings = sorted(resulting_clusterings, key=itemgetter(1))
 
-# keep the x% top and the clusters which are common
-x = 0.05
-start = (len(sorted_clusterings)-1) * (1-x)
-sorted_clusterings = sorted_clusterings[int(start)::]
+    #for clustering in sorted_clusterings:
+        #print(clustering[1])
 
-building_blocks = []
-for cluster in sorted_clusterings[0][0]:
-    exists_everywhere = True
-    for (clustering, score) in sorted_clusterings:
-        exists = False
-        for other_cluster in clustering:
-            if cluster.equals(other_cluster):
-                exists = True
-        if not exists:
-            exists_everywhere = False
-    if exists_everywhere:
-        building_blocks.append(cluster)
+    # keep the x% top and the clusters which are common
+    start = (len(sorted_clusterings)-1) * (100-x)/100
+    sorted_clusterings = sorted_clusterings[int(start)::]
 
+    building_blocks = []
+    used_modules = []
+    for cluster in sorted_clusterings[0][0]:
+        for module in cluster.list_of_modules:
+            if module not in used_modules:
+                used_modules.append(module)
+                building_blocks.append(hill_climbing.Cluster(module))
+                for other_module in cluster.list_of_modules:
+                    together_in_all_clusterings = True
+                    for (clustering, score) in sorted_clusterings:
+                        are_together = False
+                        for other_cluster in clustering:
+                            if other_module in other_cluster.list_of_modules: 
+                                are_together = True
+                                for presentcluster in building_blocks[-1].list_of_modules:
+                                    if presentcluster not in other_cluster.list_of_modules:
+                                        are_together = False
+                                        break
+                        if not are_together:
+                            together_in_all_clusterings = False
+                            break
+                    if together_in_all_clusterings:
+                        if other_module not in used_modules:
+                            building_blocks[-1].add_module(other_module)
+                            used_modules.append(other_module)
                 
-for module in bison_nodes:
-    exists = False
+
+    #add any missed modules
+    for module in bison_nodes:
+        exists = False
+        for building_block in building_blocks:
+            if module in building_block.list_of_modules:
+                exists = True
+        if exists == False:
+            building_blocks.append(hill_climbing.Cluster(module))
+
+    print("Resulting clusters")
     for building_block in building_blocks:
-        if module in building_block.list_of_modules:
-            exists = True
-    if exists == False:
-        building_blocks.append(hill_climbing.Cluster(module))
+        if len(building_block.list_of_modules)>1:
+            print("----------")
+            for module in building_block.list_of_modules:
+                print(module)
+    
+    y = hill_climbing.hill_climb(bison_weighted_connections, building_blocks)
+    final_clustering.append((y, hill_climbing.fitness(y, bison_weighted_connections)))
+    
+    print(final_clustering[-1][1])
 
-for building_block in building_blocks:
-    print("===========")
-    for module in building_block.list_of_modules:
-        print(module)
+    print()
+    
 
-hill_climbing.hill_climb(bison_weighted_connections, building_blocks)
+print("Average MQ of initial hill climbs:")
+avg = 0
+for clustering in sorted_clusterings:
+    avg += clustering[1]
+avg = avg/len(sorted_clusterings)
+print (avg)
+
+print("Best MQ of initial hill climbs:")
+print(sorted_clusterings[-1][1])
+

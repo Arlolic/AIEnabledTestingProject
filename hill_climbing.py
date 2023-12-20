@@ -109,7 +109,6 @@ def hill_climb(weighted_connections, modules):
     random.shuffle(list_of_clusters) #shuffle the clusters
 
     s_fitness = fitness(list_of_clusters, weighted_connections)
-    print(s_fitness)
     #Building block is going to be a list (or can it be a set?)
     #list_of_clusters = [[] for x in range(n)] #This is a list comprehension. Followed this site here: https://stackoverflow.com/questions/13520876/how-can-i-make-multiple-empty-lists-in-python
 
@@ -139,9 +138,6 @@ def hill_climb(weighted_connections, modules):
     list_of_clusters = [cluster for cluster in list_of_clusters if cluster.is_empty() == False]
 
     s_fitness = fitness(list_of_clusters, weighted_connections)
-    print(s_fitness)
-
-    print(list_of_clusters.__str__())
     return list_of_clusters
     # Need to identify common features of each solution in best hill climb to form building blocks for subsequent hill climb
 
